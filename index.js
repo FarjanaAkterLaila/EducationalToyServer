@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 // middleware
 app.use(cors());
@@ -30,48 +30,94 @@ async function run() {
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-
+    app.get('/post-toy', async (req, res) => {
+      console.log(req.query.postedBy)
+      let query = {};
+      if (req.query?.postedBy) {
+        query = { postedBy: req.query.postedBy}
+    }
+      const result = await toyCollection.find(query).toArray();
+      res.send(result);
+    })
     app.post("/post-toy", async (req, res) => {
-        const body = req.body;
-        const result = await toyCollection.insertOne(body);
-       console.log(result);
-       if (result?.insertedId) {
-        return res.status(200).send(result);
-      } else {
-        return res.status(404).send({
-          message: "Try again leter",
-          status: false,
-        });
-      }
-      });
+      const body = req.body;
+      const result = await toyCollection.insertOne(body);
+      console.log(result);
+      res.send(result);
+      //  if (result?.insertedId) {
+      //   return res.status(200).send(result);
+      // } else {
+      //   return res.status(404).send({
+      //     message: "Try again leter",
+      //     status: false,
+      //   });
+      // }
+    });
 
-      app.get("/myToys/:email", async (req, res) => {
-        console.log(req.params.email);
-        const jobs = await toyCollection.find({ postedBy: req.params.email}).toArray();
-        res.send(jobs);
-        console.log(jobs);
-      });
+    app.get('/post-toy/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await toyCollection.findOne(query);
+      res.send(result);
+  })
+  app.put('/post-toy/:id', async(req, res) => {
+    const id = req.params.id;
+    const filter = {_id: new ObjectId(id)}
+    const options = { upsert: true };
+    const updatedtoy = req.body;
 
-      app.get("/allToys", async(req, res) => {
-        const result = await toyCollection.find({}).toArray();
-        res.send(result);
-      });
+    const toys = {
+        $set: {
+         
+            name: updatedtoy.name, 
+            sellername: updatedtoy.sellername, 
+            category: updatedtoy.category, 
+            price: updatedtoy.price, 
+            quantity: updatedtoy.quantity, 
+            image: updatedtoy.image, 
+            description: updatedtoy.description
+        }
+    }
 
-       
+    const result = await toyCollection.updateOne(filter, toys, options);
+    res.send(result);
+})
+
+  app.delete('/post-toy/:id', async(req,res)=>{
+    const id =req.params.id;
+    const query ={
+      _id : new ObjectId(id)
+
+    }
+    const result = await toyCollection.deleteOne(query)
+    res.send(result)
+  })
+   
+    // app.get("/allToys", async(req, res) => {
+    //   const result = await toyCollection.find({}).toArray();
+    //   res.send(result);
+    // });
+
+    //   app.delete('/myToys/:id', async (req, res) => {
+    //     const id = req.params.id;
+    //     const query = { _id: new ObjectId(id) }
+    //     const result = await toyCollection.deleteOne(query);
+    //     res.send(result);
+    // })
 
 
   } finally {
     // Ensures that the client will close when you finish/error
-   // await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('doctor is running')
+  res.send('doctor is running')
 })
 
 app.listen(port, () => {
-    console.log(`Car Doctor Server is running on port ${port}`)
+  console.log(`Car Doctor Server is running on port ${port}`)
 })
