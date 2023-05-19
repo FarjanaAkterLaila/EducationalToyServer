@@ -39,11 +39,25 @@ async function run() {
         return res.status(200).send(result);
       } else {
         return res.status(404).send({
-          message: "can not insert try again leter",
+          message: "Try again leter",
           status: false,
         });
       }
       });
+
+      app.get("/myToys/:email", async (req, res) => {
+        console.log(req.params.email);
+        const jobs = await toyCollection.find({ postedBy: req.params.email}).toArray();
+        res.send(jobs);
+        console.log(jobs);
+      });
+
+      app.get("/allToys", async(req, res) => {
+        const result = await toyCollection.find({}).toArray();
+        res.send(result);
+      });
+
+       
 
 
   } finally {
