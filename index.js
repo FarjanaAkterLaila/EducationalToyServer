@@ -60,7 +60,7 @@ async function run() {
       const result = await toyCollection.findOne(query);
       res.send(result);
   })
-  app.put('/post-toy/:id', async(req, res) => {
+  app.patch('/post-toy/:id', async(req, res) => {
     const id = req.params.id;
     const filter = {_id: new ObjectId(id)}
     const options = { upsert: true };
