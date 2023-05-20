@@ -32,8 +32,27 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
     
     
+    const indexKeys = { name: 1 }; // Replace field1 and field2 with your actual field names
+    const indexOptions = { name: "name" }; // Replace index_name with the desired index name
+    const result = await alltoyCollection.createIndex(indexKeys, indexOptions);
+    console.log(result);
+    
+    app.get("/search/:text", async (req, res) => {
+      const stext = req.params.text;
+      console.log(req.params.text)
+      const result = await alltoyCollection
+        .find({
+        
+        $or: [ {name: { $regex: stext, $options: "i" } }]
+           
+        
+        })
+        .toArray();
+      res.send(result);
+    });
+
     app.get('/alltoy', async (req, res) => {
-      const cursor = alltoyCollection.find();
+      const cursor = alltoyCollection.find().limit(20);
       const result = await cursor.toArray();
       res.send(result);
   })
@@ -68,6 +87,15 @@ async function run() {
       res.send(result);
       
     })
+    app.get('/post-toy/:cate/:id', async(req, res) => {
+      console.log(req.params.cate.id)
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await toyCollection.findOne(query);
+      res.send(result);
+  })
+    
+
     app.post("/post-toy", async (req, res) => {
       const body = req.body;
       const result = await toyCollection.insertOne(body);
