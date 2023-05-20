@@ -27,8 +27,23 @@ async function run() {
     await client.connect();
     // Send a ping to confirm a successful connection
     const toyCollection = client.db('EduLerToy').collection('Toys');
+    const alltoyCollection = client.db('EduLerToy').collection('Alltoys');
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    
+    
+    app.get('/alltoy', async (req, res) => {
+      const cursor = alltoyCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+  })
+
+  app.get('/alltoy/:id', async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) }
+    const result = await alltoyCollection.findOne(query);
+    res.send(result);
+})
 
     app.get('/post-toy', async (req, res) => {
       console.log(req.query.postedBy)
@@ -38,6 +53,20 @@ async function run() {
     }
       const result = await toyCollection.find(query).toArray();
       res.send(result);
+    })
+
+    app.get('/post-toy/:cate', async(req,res)=>{
+      
+      console.log(req.params.cate)
+      if(req.params.cate == "Engineering" || req.params.cate == "Science" || req.params.cate == "Language")
+      {
+        const result = await toyCollection.find({category : req.params.cate}).toArray();
+        console.log(result);
+        return res.send(result);
+      }
+      const result =await toyCollection.find({}).toArray();
+      res.send(result);
+      
     })
     app.post("/post-toy", async (req, res) => {
       const body = req.body;
@@ -92,19 +121,7 @@ async function run() {
     const result = await toyCollection.deleteOne(query)
     res.send(result)
   })
-   
-    // app.get("/allToys", async(req, res) => {
-    //   const result = await toyCollection.find({}).toArray();
-    //   res.send(result);
-    // });
-
-    //   app.delete('/myToys/:id', async (req, res) => {
-    //     const id = req.params.id;
-    //     const query = { _id: new ObjectId(id) }
-    //     const result = await toyCollection.deleteOne(query);
-    //     res.send(result);
-    // })
-
+  
 
   } finally {
     // Ensures that the client will close when you finish/error
