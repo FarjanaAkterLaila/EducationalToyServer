@@ -24,10 +24,12 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    const toyCollection = client.db('EduLerToy').collection('Toys');
     const alltoyCollection = client.db('EduLerToy').collection('Alltoys');
+    const toyCollection = client.db('EduLerToy').collection('Toys');
+   
+    
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
     
@@ -37,6 +39,7 @@ async function run() {
     const result = await alltoyCollection.createIndex(indexKeys, indexOptions);
     console.log(result);
     
+    // serch
     app.get("/search/:text", async (req, res) => {
       const stext = req.params.text;
       console.log(req.params.text)
@@ -63,7 +66,25 @@ async function run() {
     const result = await alltoyCollection.findOne(query);
     res.send(result);
 })
+app.get('/toycat/:cate', async (req, res) => {
+ console.log(req.params.cate);
+  if(req.params.cate == "Engineering" || req.params.cate == "Science" || req.params.cate == "Language")
+        {
+          const result = await alltoyCollection.find({category : req.params.cate}).toArray();
+          console.log(result);
+      return res.send(result);
+    }
+      const result =await alltoyCollection.find({}).toArray();
+    res.send(result);
 
+})
+   app.get('/toycat/:cate/:id', async(req, res) => {
+      console.log(req.params.cate.id)
+       const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await alltoyCollection.findOne(query);
+      res.send(result);
+   })
     app.get('/post-toy', async (req, res) => {
       console.log(req.query.postedBy)
       let query = {};
@@ -73,27 +94,27 @@ async function run() {
       const result = await toyCollection.find(query).toArray();
       res.send(result);
     })
-
-    app.get('/post-toy/:cate', async(req,res)=>{
+// category show
+  //   app.get('/post-toy/:cate', async(req,res)=>{
       
-      console.log(req.params.cate)
-      if(req.params.cate == "Engineering" || req.params.cate == "Science" || req.params.cate == "Language")
-      {
-        const result = await toyCollection.find({category : req.params.cate}).toArray();
-        console.log(result);
-        return res.send(result);
-      }
-      const result =await toyCollection.find({}).toArray();
-      res.send(result);
+  //     console.log(req.params.cate)
+  //     if(req.params.cate == "Engineering" || req.params.cate == "Science" || req.params.cate == "Language")
+  //     {
+  //       const result = await toyCollection.find({category : req.params.cate}).toArray();
+  //       console.log(result);
+  //       return res.send(result);
+  //     }
+  //     const result =await toyCollection.find({}).toArray();
+  //     res.send(result);
       
-    })
-    app.get('/post-toy/:cate/:id', async(req, res) => {
-      console.log(req.params.cate.id)
-      const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
-      const result = await toyCollection.findOne(query);
-      res.send(result);
-  })
+  //   })
+  //   app.get('/post-toy/:cate/:id', async(req, res) => {
+  //     console.log(req.params.cate.id)
+  //     const id = req.params.id;
+  //     const query = {_id: new ObjectId(id)}
+  //     const result = await toyCollection.findOne(query);
+  //     res.send(result);
+  // })
     
 
     app.post("/post-toy", async (req, res) => {
